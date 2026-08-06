@@ -5,14 +5,12 @@ const connectDB = require("./config/database");
 
 const User = require("./models/user");
 
+app.use(express.json()); // to read JSON data from postman body (req.body) - use this middleware
+
 app.post("/signup", async (req, res) => {
-  // Creating a new Instance of User Model
-  const user = new User({
-    firstName: "Jai",
-    lastName: "Prakash",
-    emailId: "jaipup25@gmail.com",
-    password: "jai123",
-  });
+  // Reading Data from (API) Postman body - req.body
+  // Creating a new instance of User Model
+  const user = new User(req.body);
   try {
     await user.save();
     res.send("User Added Successfully");
