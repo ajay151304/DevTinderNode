@@ -33,7 +33,7 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Login API -/user
+// Login API - /user
 app.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req.body;
