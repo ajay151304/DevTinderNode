@@ -47,3 +47,6 @@ connectDB()
     console.error(err.message);
     console.log("Database can't be connected");
   });
+
+
+Dummy Image Url: https://geographyandyou.com/images/user-profile.png
