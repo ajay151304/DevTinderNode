@@ -4,18 +4,56 @@ const app = express();
 const connectDB = require("./config/database");
 
 const User = require("./models/user");
+const { validateSignUpData } = require("./utils/validation");
+const validator = require("validator");
+
+const bcrypt = require("bcrypt");
 
 app.use(express.json()); // to read JSON data from postman body (req.body) - use this middleware
 
 app.post("/signup", async (req, res) => {
-  // Reading Data from (API) Postman body - req.body
-  // Creating a new instance of User Model
-  const user = new User(req.body);
   try {
+    //1. Validation of data
+    validateSignUpData(req);
+    //2. Encrypt the password
+    const { firstName, lastName, emailId, password } = req.body;
+    const passwordHash = await bcrypt.hash(password, 10);
+    //3. Create a new instance of the user Model
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
+
     await user.save();
     res.send("User Added Successfully");
   } catch (err) {
-    res.status(400).send("Error saving the user: " + err.message);
+    res.status(400).send("Error : " + err.message);
+  }
+});
+
+// Login API -/user
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    if (!validator.isEmail(emailId)) {
+      throw new Error("EMail is not valid");
+    }
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
+      throw new Error("Invalid Credentials");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (isPasswordValid) {
+      res.send(`Welcome ${user.firstName}`);
+    } else {
+      throw new Error("Invalid Credentials");
+    }
+  } catch (err) {
+    res.status(400).send("ERROR : " + err.message);
   }
 });
 
