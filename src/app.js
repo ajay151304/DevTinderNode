@@ -6,10 +6,12 @@ const connectDB = require("./config/database");
 const User = require("./models/user");
 const { validateSignUpData } = require("./utils/validation");
 const validator = require("validator");
-
 const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+var jwt = require("jsonwebtoken");
 
-app.use(express.json()); // to read JSON data from postman body (req.body) - use this middleware
+app.use(express.json());
+app.use(cookieParser());
 
 app.post("/signup", async (req, res) => {
   try {
@@ -37,10 +39,9 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const { emailId, password } = req.body;
-    if (!validator.isEmail(emailId)) {
-      throw new Error("EMail is not valid");
-    }
+
     const user = await User.findOne({ emailId: emailId });
+
     if (!user) {
       throw new Error("Invalid Credentials");
     }
@@ -48,12 +49,38 @@ app.post("/login", async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (isPasswordValid) {
+      // Create a JWT TOKEN
+      const token = await jwt.sign({ _id: user._id }, "DEV@TINDER@NODE1997");
+      // Add the TOKEN to cookie and send the response back to user
+      res.cookie("token", token);
       res.send(`Welcome ${user.firstName}`);
     } else {
       throw new Error("Invalid Credentials");
     }
   } catch (err) {
     res.status(400).send("ERROR : " + err.message);
+  }
+});
+
+// GET/profile
+app.get("/profile", async (req, res) => {
+  try {
+    const cookies = req.cookies;
+    const { token } = cookies;
+    // Validate my token
+    if (!token) {
+      throw new Error("Invalid Token");
+    }
+    const decodedMessage = await jwt.verify(token, "DEV@TINDER@NODE1997");
+    const { _id } = decodedMessage;
+    const user = await User.findById(_id);
+    if (!user) {
+      throw new Error("Please Login again");
+    }
+
+    res.send("Reading cookie");
+  } catch (err) {
+    throw new Error(err);
   }
 });
 
