@@ -38,4 +38,9 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
   //
 });
 
+profileRouter.patch("/profile/password", userAuth, (req, res) => {
+  //
+  console.log(req.body);
+});
+
 module.exports = profileRouter;
