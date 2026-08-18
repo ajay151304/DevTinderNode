@@ -6,9 +6,9 @@ const connectionRequestModel = require("../models/connectionRequest");
 const User = require("../models/user");
 
 // - connectionRequestRouter
-// - POST /request/send/:status/:userId (dynamic)
-// - POST /request/review/accepted/:requestId
-// - POST /request/review/rejected/:requestId
+// - POST /request/send/:status/:userId (dynamic status--- ignored or interested)
+
+// - POST /request/review/:status/:requestId (dynamic status-- accepted or rejected )
 
 requestRouter.post(
   "/request/send/:status/:toUserId",
@@ -62,6 +62,50 @@ requestRouter.post(
       });
     } catch (err) {
       console.log("Err: " + err.message);
+      res.status(400).send("ERROR: " + err.message);
+    }
+  },
+);
+
+requestRouter.post(
+  "/request/review/:status/:requestId",
+  userAuth,
+  async (req, res) => {
+    try {
+      // darsh-(send interested)==> harsh(loggedInUser)
+      const loggedInUser = req.user;
+
+      // Validate the status
+      const { status, requestId } = req.params;
+      const allowedStatus = ["accepted", "rejected"];
+
+      if (!allowedStatus.includes(status)) {
+        return res.status(400).json({
+          message: "Status not allowed",
+        });
+      }
+
+      // is Harsh loggedIn user
+      // loggedInId=toUserId
+      // status=interested
+      // request Id should be valid
+      const connectionRequest = await connectionRequestModel.findOne({
+        _id: requestId,
+        toUserId: loggedInUser._id,
+        status: "interested",
+      });
+
+      if (!connectionRequest) {
+        return res.status(404).json({
+          message: "connection request not found",
+        });
+      }
+
+      connectionRequest.status = status;
+      const data = await connectionRequest.save();
+
+      res.json({ message: "Connection request " + status, data });
+    } catch (err) {
       res.status(400).send("ERROR: " + err.message);
     }
   },
