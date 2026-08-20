@@ -5,6 +5,8 @@ const connectionRequestModel = require("../models/connectionRequest");
 
 const User = require("../models/user");
 
+const sendEmail = require("../utils/sendEmail");
+
 // - connectionRequestRouter
 // - POST /request/send/:status/:userId (dynamic status--- ignored or interested)
 
@@ -46,7 +48,7 @@ requestRouter.post(
       if (existingConnectionRequest) {
         return res
           .status(400)
-          .json({ message: "Connection Request already exist" });
+          .json({ message: "Connection Request already Exists" });
       }
       // Corner case A to A
 
@@ -56,8 +58,13 @@ requestRouter.post(
         status,
       });
       const data = await connectionRequest.save();
+      const emailRes = await sendEmail.run();
+
+      console.log(emailRes);
+
       res.json({
-        message: `Connection request ${status} successfully`,
+        message:
+          req.user.firstName + " is " + status + " in " + toUser.firstName,
         data,
       });
     } catch (err) {

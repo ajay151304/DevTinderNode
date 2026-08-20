@@ -5,9 +5,7 @@ dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const connectDB = async () => {
   // Connect to the Cluster
-  await mongoose.connect(
-    "mongodb+srv://nodedev:ajay123@nodejs.pjdqstq.mongodb.net/DevTinderNode",
-  );
+  await mongoose.connect(process.env.DB_CONNECTION_SECRET);
 }; // return promise- Asynchronous operation
 
 module.exports = connectDB;
